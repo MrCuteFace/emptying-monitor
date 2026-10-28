@@ -1,0 +1,258 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/rubik';
+@import '@fontsource/secular-one';
+@import '@fontsource-variable/martian-mono';
+
+/*
+  מסוף הדגמה - Yard Signage.
+
+  A control room wall screen is a sign, so this is built as one. Nothing here is
+  a floating card: every surface is either painted onto the asphalt ground or
+  bolted to it as steel.
+
+  Two colour systems, each with one job:
+    CHROME  - signal yellow. Wayfinding and the active state only: reflective
+              edge bars, stencilled lettering, the selected gate's road
+              marking, the live-feed lamp, a control under the pointer. Never
+              on a container, never a large surface, never decoration.
+    STATUS  - the spec's paints. A container face, or a figure that directly
+              reports that status and sits beside its own hazard striping
+              (an urgent count). Never chrome, never decoration.
+
+  One clock: every duration on both client and server is a multiple of --t.
+  One scale: every type size is an integer multiple of --u.
+*/
+
+@theme {
+  --color-asphalt: #101110;
+  --color-steel: #26282a;
+  --color-steel-hi: #313432;
+  --color-galv: #3a4147;
+  --color-galv-lit: #4a5157;
+  --color-galv-deep: #2c3237;
+  --color-paint: #e9e6dc;
+  --color-paint-worn: #b8b4a8;
+  --color-paint-faint: #aaa69b;
+  --color-rule: #44474a;
+  --color-signal: #ffd100;
+  --color-signal-deep: #a98a00;
+
+  /* Status paints. Container faces only. */
+  --color-st-terminal: #8b9099;
+  --color-st-unopened: #c8352b;
+  --color-st-emptying: #d9a520;
+  --color-st-done: #4e9a5b;
+  --color-st-cleared: #bd3f89;
+  /* Light guide-sign blue: the one hue no live status uses, for a container
+     that is no longer on the floor at all. Lighter than every live status on
+     purpose, so the bed reads as finished business at a glance. */
+  --color-st-departed: #7cb4e0;
+  --color-st-urgent: #e87818;
+
+  /* The demo mark draws its own purples (components/brand/sphere.ts). THE BRAND IS
+     NOT UI: they never appear on a button, a status, a rail or any interactive surface. */
+
+  --font-sans: 'Rubik Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-stencil: 'Secular One', 'Rubik Variable', sans-serif;
+  --font-mono: 'Martian Mono Variable', ui-monospace, monospace;
+
+  /* Whole-step scale. Nothing between these values ships. */
+  --text-step-1: 12px;
+  --text-step-2: 16px;
+  --text-step-3: 20px;
+  --text-step-4: 24px;
+  --text-step-5: 32px;
+  --text-step-6: 40px;
+  --text-step-7: 48px;
+  --text-step-8: 64px;
+
+  /* One clock. */
+  --t: 60ms;
+  --t-2: 120ms;
+  --t-3: 180ms;
+  --t-4: 240ms;
+  --t-8: 480ms;
+
+  --ease-yard: cubic-bezier(0.22, 1, 0.28, 1);
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    color: var(--color-paint);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+
+    /* Asphalt: aggregate grain over a near-black ground. */
+    background-color: var(--color-asphalt);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='0.11'/%3E%3C/svg%3E");
+  }
+
+  ::selection {
+    background: var(--color-signal);
+    color: #1a1500;
+  }
+
+  /* Browser surfaces belong to the design too. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-asphalt);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-steel-hi);
+    border: 2px solid var(--color-asphalt);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-galv-lit);
+  }
+
+  * {
+    scrollbar-color: var(--color-steel-hi) var(--color-asphalt);
+    scrollbar-width: thin;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-signal);
+    outline-offset: 2px;
+  }
+
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stencil {
+    font-family: var(--font-stencil);
+    letter-spacing: 0.01em;
+  }
+}
+
+@layer components {
+  /* A plate bolted to the ground. Not a card: no radius, no float. */
+  .plate {
+    background: linear-gradient(180deg, var(--color-steel-hi), var(--color-steel));
+    border: 1px solid #000;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      0 2px 0 rgb(0 0 0 / 0.5);
+  }
+
+  /* The interior revealed when a stage is opened: galvanized, not painted. */
+  .galv {
+    background:
+      repeating-linear-gradient(
+        112deg,
+        rgb(255 255 255 / 0.05) 0 3px,
+        transparent 3px 7px
+      ),
+      linear-gradient(
+        176deg,
+        var(--color-galv-lit) 0%,
+        var(--color-galv) 46%,
+        var(--color-galv-deep) 100%
+      );
+    border: 1px solid #000;
+    box-shadow:
+      inset 0 3px 0 rgb(255 255 255 / 0.16),
+      inset 0 -1px 0 rgb(0 0 0 / 0.5);
+  }
+
+  /* Reflective wayfinding bar. Chrome yellow lives here and in stencil type. */
+  .reflect {
+    background: linear-gradient(180deg, var(--color-signal), var(--color-signal-deep));
+    box-shadow: 0 0 12px rgb(255 209 0 / 0.28);
+  }
+
+  /* Hazard striping. Marks urgency, never decoration. */
+  .chevron {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      var(--color-st-urgent) 0 10px,
+      #17120a 10px 20px
+    );
+  }
+
+  /* The gantry band: chrome only, so STATUS orange never becomes decoration. */
+  .hazard-chrome {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      var(--color-signal) 0 10px,
+      #15160f 10px 20px
+    );
+  }
+
+  /*
+    A search hit. Chrome, not status: this is the operator finding something,
+    not the yard reporting a condition. Reflective tape round the box.
+  */
+  .search-hit {
+    outline: 3px solid var(--color-signal);
+    outline-offset: 2px;
+    box-shadow: 0 0 16px rgb(255 209 0 / 0.5);
+  }
+
+  /* Everything the search did not hit, pushed back so the hits carry. */
+  .search-miss {
+    filter: brightness(0.4) saturate(0.55);
+  }
+
+  /* A painted field the operator types into. */
+  .field {
+    background: rgb(0 0 0 / 0.42);
+    border: 1px solid var(--color-rule);
+    color: var(--color-paint);
+  }
+
+  .field::placeholder {
+    color: var(--color-paint-faint);
+  }
+
+  .field:focus {
+    border-color: var(--color-signal);
+    outline: none;
+  }
+
+  /* Road marking painted on the asphalt. */
+  .marking {
+    background: var(--color-rule);
+  }
+}
+
+/* Motion is state, never decoration, and every rate is a multiple of --t. */
+@media (prefers-reduced-motion: reduce) {
+  .motion-flash {
+    animation: none !important;
+  }
+}
+
+@keyframes paint-flash {
+  from {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.motion-flash {
+  animation: paint-flash calc(var(--t) * 12) var(--ease-yard) 1;
+}
+
+/* ---- Brand: the demo puzzle sphere ------------------------------------------
+   An invented mark (components/brand/sphere.ts). The loader is the same sphere
+   in motion, drawn on a canvas with motion blur.
+---------------------------------------------------------------------------- */
+@layer components {
+  .brand-mark svg {
+    /* A faint lift so the sphere's dark seams do not merge into the ground. */
+    filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.6));
+  }
+}
+
